@@ -1,7 +1,8 @@
 
 #!/usr/bin/python
 
-# Train a multi-layer perceptron neural network random forest
+# Train a multi-layer perceptron neural network random net
+# A neural network 
 # to classify images of handwritten digits
 # Keras, Tensorflow, GPU-Acceleration, MLP, Random Forest
 
@@ -71,7 +72,7 @@ def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     _, test_acc = model.evaluate(rf_test_x.values, rf_test_y, verbose=1)
     return model, test_acc
 
-# Execute multiple train-test splits
+# Execute multiple train/test splits
 n_splits = 31
 scores, models, cols = list(), list(), list()
 for i in range(n_splits):
@@ -97,7 +98,7 @@ for i in range(n_splits):
     models.append(model)
     cols.append(rf_train_x.columns)
 
-# Summarize expected performance from K-fold cross-validation
+# Summarize expected performance from a single weak learner
 print('Estimated Accuracy %.3f (%.3f)' % (np.mean(scores), np.std(scores)))
 
 # evaluate a specific number of members in an ensemble
@@ -121,7 +122,7 @@ def evaluate_n_members(models, n_models, new_x, new_y):
     yhat = np.argmax(summed, axis=1)
     return accuracy_score(new_y, yhat)
 
-# Evaluate different ensembles on hold out set
+# Evaluate the random net on hold out set
 single_scores, ensemble_scores = list(), list()
 for i in range(1,n_splits+1):
     
@@ -134,11 +135,11 @@ for i in range(1,n_splits+1):
     _, single_score = models[i-1].evaluate(new_subset.values, new_y_enc, verbose=0)
     
     # Print Results
-    print('> %d: single=%.3f, ensemble=%.3f' % (i, single_score, ensemble_score))
+    print('> %d: single=%.3f, random net=%.3f' % (i, single_score, ensemble_score))
     ensemble_scores.append(ensemble_score)
     single_scores.append(single_score)
 
-# Plot individual scores vs ensembled scores
+# Plot individual scores vs. ensembled scores
 print('Accuracy %.3f (%.3f)' % (np.mean(single_scores), np.std(single_scores)))
 x_axis = [i for i in range(1, n_splits+1)]
 pyplot.plot(x_axis, single_scores, marker='o', linestyle='None')
