@@ -4,7 +4,7 @@
 # Train a multi-layer perceptron neural network random net
 # A neural network 
 # to classify images of handwritten digits
-# Keras, Tensorflow, GPU-Acceleration, MLP, Random Forest
+# Tensorflow, GPU-Acceleration, MLP, Random Forest
 
 import pandas as pd
 import numpy as np
