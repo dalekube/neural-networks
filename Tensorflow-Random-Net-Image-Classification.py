@@ -28,18 +28,11 @@ n_digits = len(data.target_names)
 
 # Separate a 10% hold out data set for future predictions
 # After the random forest is trained
-train_x, new_x, train_y, new_y = train_test_split(
-        data.data,
-        data.target,
-        stratify=data.target,
-        test_size=0.1)
-
+train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1)
 train_x = pd.DataFrame(train_x)
 new_x = pd.DataFrame(new_x)
 
-# Data set totals
-print("Training Samples =", str(len(train_x)))
-print("Hold Out Samples =", str(len(new_x)))
+
 
 # Define function to evaluate a single MLP model
 def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
