@@ -156,3 +156,30 @@ pyplot.ylabel('Classification Accuracy')
 pyplot.xlabel('Weak Learner (Neural Net)')
 pyplot.show()
 
+# Single Strong Neural Network Benchmark
+# Encode targets
+rf_train_y = to_categorical(train_y, num_classes=n_digits)
+rf_new_y = to_categorical(new_y, num_classes=n_digits)
+
+# Define sequential model
+model = Sequential()
+model.add(Dense(50,input_dim=train_x.shape[1]))
+model.add(Activation('relu'))
+model.add(Dropout(0.05))
+model.add(Dense(15))
+model.add(Activation('relu'))
+model.add(GaussianNoise(0.10))
+model.add(Dense(n_digits))
+model.add(Activation('softmax'))
+model.compile(loss='categorical_crossentropy', optimizer=Adam(0.01), metrics=['accuracy'])
+
+# Define callbacks
+early_stop = EarlyStopping(monitor="val_loss", patience=3, verbose=1, restore_best_weights=True)
+
+# Fit model
+history = model.fit(train_x, rf_train_y, epochs=100, batch_size=1000, 
+          verbose=0, validation_data=(new_x, rf_new_y),
+          callbacks=[early_stop])
+          
+print('Single Strong Neural Network Accuracy =', '{:.2%}'.format(history.history['accuracy'][-1]))
+

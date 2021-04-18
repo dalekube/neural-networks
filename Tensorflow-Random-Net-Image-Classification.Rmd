@@ -13,7 +13,7 @@ use_python('/usr/bin/python3', required=T)
 
 This code uses many weak dense neural networks in a "random net" to achieve better classification and generalization. The commonly known random forest algorithm develops many weak decision trees; however, this example shows how a data scientist can take the same approach with neural networks. Instead of saying "random forest", one might call it a "random net" to reflect the use of neural networks.
 
-This example is motivated by Jason Brownlee’s article called ‘How to Develop an Ensemble of Deep Learning Models in Keras’ found here: https://machinelearningmastery.com/model-averaging-ensemble-for-deep-learning-neural-networks/. Brownlee’s example represents a bagging ensemble. The random net, in this publication, goes a step further with the random selection a subset of flattened pixel features for each neural network.
+This example is motivated by Jason Brownlee’s article called ‘How to Develop an Ensemble of Deep Learning Models in Keras’ found here: https://machinelearningmastery.com/model-averaging-ensemble-for-deep-learning-neural-networks/. Brownlee’s example represents a bagging ensemble. The random net, in this publication, goes a step further with the random selection of a subset of flattened pixel features for each neural network.
 
 GitHub: https://github.com/dalekube/neural-networks/blob/master/Tensorflow-MLP-Random-Net-Image-Classification.py
 
@@ -120,7 +120,7 @@ Finally, we execute multiple splits and train the individual weak learners. This
 
 ```{python fitModels, results='hide'}
 # Execute multiple train/test splits
-n_splits = 31
+n_splits = 51
 scores, models, cols = list(), list(), list()
 for i in range(n_splits):
     
@@ -131,7 +131,7 @@ for i in range(n_splits):
     n_features = rf_train_x.shape[1]
     
     # Split data with 75% random bagging fraction
-    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75, random_state=77)
+    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.50, random_state=77)
     
     # Train the model
     model, test_acc = train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features)
@@ -204,7 +204,7 @@ print('Random Net Accuracy %.3f' % ensemble_scores[-1])
 
 Plot the additive performance of the random net as each weak learner is included. This can be visually compared to the individual scores of the weak learners in the same sequential order.
 
-```{python performancePlot, , results='hide'}
+```{python performancePlot, results='hide'}
 # Plot individual scores vs. ensembled scores
 x_axis = [i for i in range(1, n_splits+1)]
 pyplot.plot(x_axis, single_scores, marker='o', linestyle='None')
@@ -214,4 +214,36 @@ pyplot.legend(['Weak Learners','Random Net'])
 pyplot.ylabel('Classification Accuracy')
 pyplot.xlabel('Weak Learner (Neural Net)')
 pyplot.show()
+```
+
+## Single Strong Neural Network Benchmark
+
+Train a single neural network using all of the training data and features to produce a benchmark. The benchmark comparison offers evidence that the additional generalization from the random net will produce better performance.
+
+```{python benchmark}
+# Encode targets
+rf_train_y = to_categorical(train_y, num_classes=n_digits)
+rf_new_y = to_categorical(new_y, num_classes=n_digits)
+
+# Define sequential model
+model = Sequential()
+model.add(Dense(50,input_dim=train_x.shape[1]))
+model.add(Activation('relu'))
+model.add(Dropout(0.05))
+model.add(Dense(15))
+model.add(Activation('relu'))
+model.add(GaussianNoise(0.10))
+model.add(Dense(n_digits))
+model.add(Activation('softmax'))
+model.compile(loss='categorical_crossentropy', optimizer=Adam(0.01), metrics=['accuracy'])
+
+# Define callbacks
+early_stop = EarlyStopping(monitor="val_loss", patience=3, verbose=1, restore_best_weights=True)
+
+# Fit model
+history = model.fit(train_x, rf_train_y, epochs=100, batch_size=1000, 
+          verbose=0, validation_data=(new_x, rf_new_y),
+          callbacks=[early_stop])
+          
+print('Single Strong Neural Network Accuracy =', '{:.2%}'.format(history.history['accuracy'][-1]))
 ```
