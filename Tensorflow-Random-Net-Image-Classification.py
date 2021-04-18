@@ -28,9 +28,26 @@ n_digits = len(data.target_names)
 
 # Separate a 10% hold out data set for future predictions
 # After the random forest is trained
-train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1)
+train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1, random_state=77)
 train_x = pd.DataFrame(train_x)
 new_x = pd.DataFrame(new_x)
+
+# Data set totals
+print("Training Samples =", '{:,}'.format(len(train_x)))
+print("Hold Out Samples =", '{:,}'.format(len(new_x)))
+
+# Display four random images from the data
+# in a 2x2 plot grid
+imgs = np.random.randint(0,len(data.images)-1,4)
+fig, ax = pyplot.subplots(2,2)
+ax[0,0].imshow(data.images[imgs[0]])
+ax[0,0].title.set_text('Digit = ' + str(data.target[imgs[0]]))
+ax[0,1].imshow(data.images[imgs[1]])
+ax[0,1].title.set_text('Digit = ' + str(data.target[imgs[1]]))
+ax[1,0].imshow(data.images[imgs[2]])
+ax[1,0].title.set_text('Digit = ' + str(data.target[imgs[2]]))
+ax[1,1].imshow(data.images[imgs[3]])
+ax[1,1].title.set_text('Digit = ' + str(data.target[imgs[3]]))
 
 # Define function to evaluate a single MLP model
 def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
@@ -75,7 +92,7 @@ for i in range(n_splits):
     n_features = rf_train_x.shape[1]
     
     # Split data with 75% random bagging fraction
-    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75)
+    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75, random_state=77)
     
     # Train the model
     model, test_acc = train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features)
@@ -130,11 +147,12 @@ print('Maximum Weak Learner Accuracy %.3f' % max(scores))
 print('Random Net Accuracy %.3f' % ensemble_scores[-1])
 
 # Plot individual scores vs. ensembled scores
-print('Accuracy %.3f (%.3f)' % (np.mean(single_scores), np.std(single_scores)))
 x_axis = [i for i in range(1, n_splits+1)]
 pyplot.plot(x_axis, single_scores, marker='o', linestyle='None')
 pyplot.plot(x_axis, ensemble_scores, marker='o')
 pyplot.title('Classification Performance\nRandom Net v. Individual Weak Learners')
 pyplot.legend(['Weak Learners','Random Net'])
+pyplot.ylabel('Classification Accuracy')
+pyplot.xlabel('Weak Learner (Neural Net)')
 pyplot.show()
 

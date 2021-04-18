@@ -11,9 +11,9 @@ library(reticulate)
 use_python('/usr/bin/python3', required=T)
 ```
 
-This code demonstrates the use of many weak multi-layer perceptron neural networks in a random net to better classify images and avoid overfitting. The commonly known random forest algorithm develops many weak decision trees; however, this example shows how a data scientist can take the same approach by replacing decision trees with neural networks. Instead of saying ‘random forest’, one might call it a ‘random net’.
+This code uses many weak dense neural networks in a "random net" to achieve better classification and generalization. The commonly known random forest algorithm develops many weak decision trees; however, this example shows how a data scientist can take the same approach with neural networks. Instead of saying "random forest", one might call it a "random net" to reflect the use of neural networks.
 
-This example is motivated by Jason Brownlee’s article called ‘How to Develop an Ensemble of Deep Learning Models in Keras’ found here: https://machinelearningmastery.com/model-averaging-ensemble-for-deep-learning-neural-networks/. Brownlee’s example represents a bagging ensemble, whereas the random net in this publication goes a step further by randomly selecting a subset of flattened pixel features for each neural network.
+This example is motivated by Jason Brownlee’s article called ‘How to Develop an Ensemble of Deep Learning Models in Keras’ found here: https://machinelearningmastery.com/model-averaging-ensemble-for-deep-learning-neural-networks/. Brownlee’s example represents a bagging ensemble. The random net, in this publication, goes a step further with the random selection a subset of flattened pixel features for each neural network.
 
 GitHub: https://github.com/dalekube/neural-networks/blob/master/Tensorflow-MLP-Random-Net-Image-Classification.py
 
@@ -47,7 +47,7 @@ n_digits = len(data.target_names)
 
 # Separate a 10% hold out data set for future predictions
 # After the random forest is trained
-train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1)
+train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1, random_state=77)
 train_x = pd.DataFrame(train_x)
 new_x = pd.DataFrame(new_x)
 ```
@@ -56,8 +56,8 @@ new_x = pd.DataFrame(new_x)
 
 ```{python dataTotals}
 # Data set totals
-print("Training Samples =", str(len(train_x)))
-print("Hold Out Samples =", str(len(new_x)))
+print("Training Samples =", '{:,}'.format(len(train_x)))
+print("Hold Out Samples =", '{:,}'.format(len(new_x)))
 ```
 
 ## Display four random images
@@ -67,9 +67,13 @@ print("Hold Out Samples =", str(len(new_x)))
 # in a 2x2 plot grid
 imgs = np.random.randint(0,len(data.images)-1,4)
 fig, ax = pyplot.subplots(2,2)
+ax[0,0].title.set_text('Digit = ' + str(data.target[imgs[0]]))
 ax[0,0].imshow(data.images[imgs[0]])
+ax[0,1].title.set_text('Digit = ' + str(data.target[imgs[1]]))
 ax[0,1].imshow(data.images[imgs[1]])
+ax[1,0].title.set_text('Digit = ' + str(data.target[imgs[2]]))
 ax[1,0].imshow(data.images[imgs[2]])
+ax[1,1].title.set_text('Digit = ' + str(data.target[imgs[3]]))
 ax[1,1].imshow(data.images[imgs[3]])
 ```
 
@@ -127,7 +131,7 @@ for i in range(n_splits):
     n_features = rf_train_x.shape[1]
     
     # Split data with 75% random bagging fraction
-    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75)
+    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75, random_state=77)
     
     # Train the model
     model, test_acc = train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features)
@@ -207,5 +211,7 @@ pyplot.plot(x_axis, single_scores, marker='o', linestyle='None')
 pyplot.plot(x_axis, ensemble_scores, marker='o')
 pyplot.title('Classification Performance\nRandom Net v. Individual Weak Learners')
 pyplot.legend(['Weak Learners','Random Net'])
+pyplot.ylabel('Classification Accuracy')
+pyplot.xlabel('Weak Learner (Neural Net)')
 pyplot.show()
 ```
