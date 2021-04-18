@@ -32,8 +32,6 @@ train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, strati
 train_x = pd.DataFrame(train_x)
 new_x = pd.DataFrame(new_x)
 
-
-
 # Define function to evaluate a single MLP model
 def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     
@@ -58,7 +56,7 @@ def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     
     # Fit model
     model.fit(rf_train_x.values, rf_train_y, epochs=100, batch_size=1000, 
-              verbose=1, validation_data=(rf_test_x.values,rf_test_y),
+              verbose=0, validation_data=(rf_test_x.values, rf_test_y),
               callbacks=[early_stop])
     
     # Evaluate model
@@ -76,8 +74,8 @@ for i in range(n_splits):
     rf_train_x = train_x.sample(n,axis=1)
     n_features = rf_train_x.shape[1]
     
-    # Split data with 80% random bagging fraction
-    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.20)
+    # Split data with 75% random bagging fraction
+    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75)
     
     # Train the model
     model, test_acc = train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features)
@@ -86,9 +84,6 @@ for i in range(n_splits):
     scores.append(test_acc)
     models.append(model)
     cols.append(rf_train_x.columns)
-
-# Summarize expected performance from a single weak learner
-print('Estimated Accuracy %.3f (%.3f)' % (np.mean(scores), np.std(scores)))
 
 # evaluate a specific number of members in an ensemble
 def evaluate_n_members(models, n_models, new_x, new_y):
@@ -127,6 +122,12 @@ for i in range(1,n_splits+1):
     print('> %d: single=%.3f, random net=%.3f' % (i, single_score, ensemble_score))
     ensemble_scores.append(ensemble_score)
     single_scores.append(single_score)
+
+# Performance for the best weak learner
+print('Maximum Weak Learner Accuracy %.3f' % max(scores))
+
+# Random Net Performance
+print('Random Net Accuracy %.3f' % ensemble_scores[-1])
 
 # Plot individual scores vs. ensembled scores
 print('Accuracy %.3f (%.3f)' % (np.mean(single_scores), np.std(single_scores)))

@@ -36,7 +36,7 @@ from sklearn.metrics import accuracy_score
 
 The handwritten digits dataset from sklearn is loaded using the load_digits() function from sklearn. The data set is documented here: https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html. A 10% hold-out set is defined for future evaluation after the random net and weak learners are trained. This allows us to evaluate the performance of each model using unseen observations.
 
-```{python loadData, echo=FALSE}
+```{python loadData, results='hide'}
 # Load the handwritten digits dataset from sklearn
 data = load_digits()
 
@@ -50,7 +50,11 @@ n_digits = len(data.target_names)
 train_x, new_x, train_y, new_y = train_test_split(data.data, data.target, stratify=data.target, test_size=0.1)
 train_x = pd.DataFrame(train_x)
 new_x = pd.DataFrame(new_x)
+```
 
+## Data set totals
+
+```{python dataTotals}
 # Data set totals
 print("Training Samples =", str(len(train_x)))
 print("Hold Out Samples =", str(len(new_x)))
@@ -73,7 +77,7 @@ ax[1,1].imshow(data.images[imgs[3]])
 
 Define the function that accepts a random subset of training and testing data with a random subset of features (flattened pixel vectors) and trains an individual multi-layer perceptron network (also called a dense network). The function is called multiple times over the training process.
 
-```{python weakLearner, echo=FALSE}
+```{python weakLearner, results='hide'}
 # Define function to evaluate a single MLP model
 def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     
@@ -85,7 +89,7 @@ def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     model = Sequential()
     model.add(Dense(50,input_dim=n_features))
     model.add(Activation('relu'))
-    model.add(Dropout(0.10))
+    model.add(Dropout(0.05))
     model.add(Dense(15))
     model.add(Activation('relu'))
     model.add(GaussianNoise(0.10))
@@ -98,7 +102,7 @@ def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
     
     # Fit model
     model.fit(rf_train_x.values, rf_train_y, epochs=100, batch_size=1000, 
-              verbose=1, validation_data=(rf_test_x.values,rf_test_y),
+              verbose=0, validation_data=(rf_test_x.values, rf_test_y),
               callbacks=[early_stop])
     
     # Evaluate model
@@ -110,7 +114,7 @@ def train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features):
 
 Finally, we execute multiple splits and train the individual weak learners. This example trains 31 weak learners in total. A performance summary is provided as a benchmark once the training round is complete. The code calculates the average and standard deviation classification accuracy across the weak learners.
 
-```{python fitModels, echo=FALSE}
+```{python fitModels, results='hide'}
 # Execute multiple train/test splits
 n_splits = 31
 scores, models, cols = list(), list(), list()
@@ -122,8 +126,8 @@ for i in range(n_splits):
     rf_train_x = train_x.sample(n,axis=1)
     n_features = rf_train_x.shape[1]
     
-    # Split data with 80% random bagging fraction
-    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.20)
+    # Split data with 75% random bagging fraction
+    rf_train_x, rf_test_x, rf_train_y, rf_test_y = train_test_split(rf_train_x, train_y, test_size=0.75)
     
     # Train the model
     model, test_acc = train_model(rf_train_x, rf_train_y, rf_test_x, rf_test_y, n_features)
@@ -138,7 +142,7 @@ for i in range(n_splits):
 
 Consecutively evaluate the ensembled performance of the weak learners on the hold out set by adding the resulting probabilities from each model. The class with the highest probability is used as the final prediction for the random net and measured against the true class in the hold out set. This allows us to observe the increase in performance as the weak learners produce a consensus prediction.
 
-```{python randomNetEval}
+```{python randomNetEval, results='hide'}
 # evaluate a specific number of members in an ensemble
 def evaluate_n_members(models, n_models, new_x, new_y):
     
@@ -176,18 +180,28 @@ for i in range(1,n_splits+1):
     print('> %d: single=%.3f, random net=%.3f' % (i, single_score, ensemble_score))
     ensemble_scores.append(ensemble_score)
     single_scores.append(single_score)
+```
 
-# Average and STD performance for the weak learners
-print('Accuracy %.3f (%.3f)' % (np.mean(single_scores), np.std(single_scores)))
+## Weak Learner Performance
+
+```{python weakLearnerPerformance}
+# Performance for the best weak learner
+print('Maximum Weak Learner Accuracy %.3f' % max(scores))
+```
+
+## Ensemble Performance (Random Net)
+
+```{python ensemblePerformance}
+# Random Net Performance
+print('Random Net Accuracy %.3f' % ensemble_scores[-1])
 ```
 
 ## Performance Plot
 
 Plot the additive performance of the random net as each weak learner is included. This can be visually compared to the individual scores of the weak learners in the same sequential order.
 
-```{python performancePlot}
+```{python performancePlot, , results='hide'}
 # Plot individual scores vs. ensembled scores
-print('Accuracy %.3f (%.3f)' % (np.mean(single_scores), np.std(single_scores)))
 x_axis = [i for i in range(1, n_splits+1)]
 pyplot.plot(x_axis, single_scores, marker='o', linestyle='None')
 pyplot.plot(x_axis, ensemble_scores, marker='o')
